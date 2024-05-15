@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fake Cities Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        #cityList {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .city {
+            margin: 5px 0;
+        }
+
+        #timer {
+            margin-top: 10px;
+            font-size: 14px;
+            color: green;
+        }
+
+        .controls {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="controls">
+        <button id="generateButton">Generate</button>
+        <input type="text" id="filterInput" placeholder="Type to filter...">
+        <label>
+            <input type="checkbox" id="useWorker"> Use Web Worker
+        </label>
+    </div>
+    <br />
+    <div id="timer"></div>
+    <hr />
+    <ul id="cityList"></ul>
+
+    <script type="module">
+
+        import { faker } from 'https://esm.sh/@faker-js/faker';
+
+        let cities = [];
+        let worker = new Worker('worker.js');
+
+        document.getElementById('generateButton').addEventListener('click', function () {
+            const cityList = document.getElementById('cityList');
+            cityList.innerHTML = ''; // Clear any existing city names
+
+            cities = []; // Clear the existing cities array
+
+            const numberOfCities = 2001; // Generating 2001 to ensure more than 2000
+            for (let i = 0; i < numberOfCities; i++) {
+                const city = faker.address.city();
+                cities.push(city);
+            }
+            displayCities(cities);
+        });
+
+        document.getElementById('filterInput').addEventListener('input', function () {
+            const useWorker = document.getElementById('useWorker').checked;
+            const keyword = this.value.toLowerCase();
+            const start = performance.now(); // Start timing
+
+            if (useWorker) {
+                // Use Web Worker for filtering
+                worker.postMessage({ cities, keyword });
+                worker.onmessage = function (event) {
+                    const filteredCities = event.data;
+                    displayCities(filteredCities);
+                    const end = performance.now(); // End timing
+                    const timeSpent = end - start;
+                    document.getElementById('timer').textContent = `Filtering (Worker) took ${timeSpent.toFixed(2)} milliseconds.`;
+                };
+            } else {
+                // Main thread filtering
+                const filteredCities = cities.filter(city => city.toLowerCase().includes(keyword));
+                displayCities(filteredCities);
+                const end = performance.now(); // End timing
+                const timeSpent = end - start;
+                document.getElementById('timer').textContent = `Filtering (Main thread) took ${timeSpent.toFixed(2)} milliseconds.`;
+            }
+        });
+
+        function displayCities(cities) {
+            const cityList = document.getElementById('cityList');
+            cityList.innerHTML = ''; // Clear the list
+            cities.forEach(city => {
+                const listItem = document.createElement('li');
+                listItem.className = 'city';
+                listItem.textContent = city;
+                cityList.appendChild(listItem);
+            });
+        }
+    </script>
+</body>
+
+</html>

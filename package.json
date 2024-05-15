@@ -1,0 +1,16 @@
+{
+  "name": "worker",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "acgsior <acgsior@outlook.com>",
+  "license": "MIT",
+  "scripts": {
+    "dev": "lite-server"
+  },
+  "devDependencies": {
+    "lite-server": "^2.6.1"
+  },
+  "dependencies": {
+    "@faker-js/faker": "^8.4.1"
+  }
+}
